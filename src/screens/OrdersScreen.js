@@ -13,6 +13,7 @@ import { DataStore } from "aws-amplify";
 
 import OrderItem from "../components/OrderItem";
 import { Order } from "../models";
+import CustomMarker from "../components/CustomMarker";
 
 const OrdersScreen = () => {
   const [orders, setOrders] = useState([]);
@@ -53,26 +54,12 @@ const OrdersScreen = () => {
         showsUserLocation
         followUserLocation
       >
-        {orders.map((marker, index) => (
-          <Marker
-            key={index}
-            title={marker.Restaurant.name}
-            description={marker.Restaurant.address}
-            coordinate={{
-              latitude: marker.Restaurant.lat, //Ozone cinema
-              longitude: marker.Restaurant.lng,
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: "#3fc060",
-                padding: 5,
-                borderRadius: 20,
-              }}
-            >
-              <Entypo name="shop" size={44} color="white" />
-            </View>
-          </Marker>
+        {orders.map((order) => (
+          <CustomMarker
+            data={order.Restaurant}
+            type="RESTAURANT"
+            key={order.id}
+          />
         ))}
       </MapView>
 

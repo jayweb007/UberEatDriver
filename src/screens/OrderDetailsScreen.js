@@ -23,6 +23,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 
 import * as env from "../../env";
 import { useOrderContext } from "../contexts/OrderContext";
+import CustomMarker from "../components/CustomMarker";
 
 const driver = {
   latitude: 6.506935, //DRIVER
@@ -48,11 +49,12 @@ const OrderDetailsScreen = () => {
     pickUpOrder,
     completeOrder,
   } = useOrderContext();
-  const [driverLocation, setDriverLocation] = useState(null);
-  const [driverIsHere, setDriverIsHere] = useState(false);
 
+  const [driverLocation, setDriverLocation] = useState(null);
   const [totalKM, setTotalKM] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
+  const driverIsHere = totalKM < 1;
+
   const navigation = useNavigation();
   const mapRef = useRef(null);
   const bottomSheetRef = useRef(null);
@@ -80,21 +82,6 @@ const OrderDetailsScreen = () => {
         longitude: location.coords.longitude,
       });
     })();
-    // const forgroundSubscription = async () => {
-    //   let watchingDriver = await Location.watchPositionAsync(
-    //     {
-    //       accuracy: Location.Accuracy.High,
-    //       distanceInterval: 100,
-    //     },
-    //     (updatedLocation) => {
-    //       setDriverLocation({
-    //         latitude: updatedLocation.coords.latitude,
-    //         longitude: updatedLocation.coords.longitude,
-    //       });
-    //     }
-    //   );
-    //   return watchingDriver;
-    // };
 
     forgroundSubscription();
   }, []);
@@ -103,7 +90,7 @@ const OrderDetailsScreen = () => {
     let watchingDriver = await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.High,
-        distanceInterval: 100,
+        distanceInterval: 500,
       },
       (updatedLocation) => {
         setDriverLocation({
@@ -141,11 +128,9 @@ const OrderDetailsScreen = () => {
     if (order.status === "READY_FOR_PICKUP") {
       return "Accept Order";
     }
-
     if (order.status === "ACCEPTED") {
       return "Pick-Up Order";
     }
-
     if (order.status === "PICKED_UP") {
       return "Complete Delivery";
     }
@@ -155,11 +140,9 @@ const OrderDetailsScreen = () => {
     if (order.status === "READY_FOR_PICKUP") {
       return false;
     }
-
     if (order.status === "ACCEPTED" && driverIsHere) {
       return false;
     }
-
     if (order.status === "PICKED_UP" && driverIsHere) {
       return false;
     }
@@ -214,14 +197,13 @@ const OrderDetailsScreen = () => {
           strokeColor={"#3fc060"}
           apikey={env.GOOGLE_MAPS_APIKEY}
           onReady={(result) => {
-            setDriverIsHere(result.distance <= 0.1);
             setTotalKM(result.distance);
             setTotalTime(result.duration);
           }}
           lineDashPattern={[0]}
         />
         <Marker
-          title="Driver Location"
+          title="Driver"
           description="Driver Location"
           coordinate={{
             latitude: driverLocation.latitude, //Ozone cinema
@@ -242,36 +224,9 @@ const OrderDetailsScreen = () => {
             />
           </View>
         </Marker>
-        <Marker
-          title={user?.name}
-          description={user?.address}
-          coordinate={deliveryLocation}
-        >
-          <View
-            style={{
-              backgroundColor: "#3fc060",
-              padding: 5,
-              borderRadius: 20,
-            }}
-          >
-            <MaterialIcons name="restaurant" size={44} color="white" />
-          </View>
-        </Marker>
-        <Marker
-          title={order?.Restaurant?.name}
-          description={order?.Restaurant?.address}
-          coordinate={restaurantLocation}
-        >
-          <View
-            style={{
-              backgroundColor: "#3fc060",
-              padding: 5,
-              borderRadius: 20,
-            }}
-          >
-            <Entypo name="shop" size={44} color="white" />
-          </View>
-        </Marker>
+
+        <CustomMarker data={user} type="USER" />
+        <CustomMarker data={order?.Restaurant} type="RESTAURANT" />
       </MapView>
       {order.status === "READY_FOR_PICKUP" && (
         <Ionicons
