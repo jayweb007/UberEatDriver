@@ -27,6 +27,21 @@ const OrderContextProvider = ({ children }) => {
     ).then(setDishes);
   };
 
+  useEffect(() => {
+    if (!order) {
+      return;
+    }
+    const subscription = DataStore.observe(Order, order.id).subscribe(
+      ({ opType, element }) => {
+        if (opType === "UPDATE") {
+          fetchOrder(element.id);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [order?.id]);
+
   const acceptOrder = () => {
     //Update Order, Change status and assign driver
     DataStore.save(
@@ -46,13 +61,14 @@ const OrderContextProvider = ({ children }) => {
     ).then(setOrder);
   };
 
-  const completeOrder = () => {
+  const completeOrder = async () => {
     //Update Order, Change status
-    DataStore.save(
+    const updatedOrder = await DataStore.save(
       Order.copyOf(order, (updated) => {
         updated.status = "COMPLETED";
       })
-    ).then(setOrder);
+    );
+    setOrder(updatedOrder);
   };
 
   //

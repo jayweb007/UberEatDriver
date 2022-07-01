@@ -210,7 +210,7 @@ const OrderDetailsScreen = () => {
           >
             <MaterialCommunityIcons
               name="truck-delivery"
-              size={44}
+              size={24}
               color="white"
             />
           </View>

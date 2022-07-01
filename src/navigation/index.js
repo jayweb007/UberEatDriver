@@ -4,11 +4,25 @@ import OrdersScreen from "../screens/OrdersScreen";
 import OrderDetailsScreen from "../screens/OrderDetailsScreen";
 import { useAuthContext } from "../contexts/AuthContext";
 import AccountScreen from "../screens/AccountScreen";
+import { ActivityIndicator } from "react-native";
 
 const Stack = createNativeStackNavigator();
 
 const RootNavigation = () => {
   const { dbDriver } = useAuthContext();
+
+  //SCREEN LOADING
+  if (dbDriver === null) {
+    return (
+      <ActivityIndicator
+        size={"large"}
+        color="grey"
+        style={{ paddingTop: 400 }}
+      />
+    );
+  }
+
+  //
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {dbDriver ? (
