@@ -11,9 +11,7 @@ import {
   FontAwesome5,
   Fontisto,
   Ionicons,
-  Entypo,
   MaterialCommunityIcons,
-  MaterialIcons,
 } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
 import MapView, { Marker } from "react-native-maps";
@@ -37,6 +35,12 @@ const foodOwner = {
 const canteen = {
   latitude: 6.507934, //Cummerata Terrace | Thiel Group
   longitude: 3.372653,
+};
+
+const STATUS_TO_TITLE = {
+  READY_FOR_PICKUP: "Accept Order",
+  ACCEPTED: "Pick-Up Order",
+  PICKED_UP: "Complete Delivery",
 };
 
 const OrderDetailsScreen = () => {
@@ -67,6 +71,22 @@ const OrderDetailsScreen = () => {
     fetchOrder(id);
   }, [id]);
 
+  const forgroundSubscription = async () => {
+    let watchingDriver = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.High,
+        distanceInterval: 500,
+      },
+      (updatedLocation) => {
+        setDriverLocation({
+          latitude: updatedLocation.coords.latitude,
+          longitude: updatedLocation.coords.longitude,
+        });
+      }
+    );
+    return watchingDriver;
+  };
+
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -86,24 +106,9 @@ const OrderDetailsScreen = () => {
     forgroundSubscription();
   }, []);
 
-  const forgroundSubscription = async () => {
-    let watchingDriver = await Location.watchPositionAsync(
-      {
-        accuracy: Location.Accuracy.High,
-        distanceInterval: 500,
-      },
-      (updatedLocation) => {
-        setDriverLocation({
-          latitude: updatedLocation.coords.latitude,
-          longitude: updatedLocation.coords.longitude,
-        });
-      }
-    );
-    return watchingDriver;
-  };
-
   const onButtonPress = async () => {
-    if (order.status === "READY_FOR_PICKUP") {
+    const { status } = order;
+    if (status === "READY_FOR_PICKUP") {
       bottomSheetRef.current?.collapse();
       mapRef.current.animateToRegion({
         latitude: driverLocation.latitude, //Ozone cinema
@@ -113,37 +118,23 @@ const OrderDetailsScreen = () => {
       });
       acceptOrder();
     }
-    if (order.status === "ACCEPTED") {
+    if (status === "ACCEPTED") {
       bottomSheetRef.current?.collapse();
       pickUpOrder();
     }
-    if (order.status === "PICKED_UP") {
+    if (status === "PICKED_UP") {
       await completeOrder();
       bottomSheetRef.current?.collapse();
       navigation.goBack();
     }
   };
 
-  const buttonTitle = () => {
-    if (order.status === "READY_FOR_PICKUP") {
-      return "Accept Order";
-    }
-    if (order.status === "ACCEPTED") {
-      return "Pick-Up Order";
-    }
-    if (order.status === "PICKED_UP") {
-      return "Complete Delivery";
-    }
-  };
-
   const buttonDisabled = () => {
-    if (order.status === "READY_FOR_PICKUP") {
+    const { status } = order;
+    if (status === "READY_FOR_PICKUP") {
       return false;
     }
-    if (order.status === "ACCEPTED" && driverIsHere) {
-      return false;
-    }
-    if (order.status === "PICKED_UP" && driverIsHere) {
+    if ((status === "ACCEPTED" || status === "PICKED_UP") && driverIsHere) {
       return false;
     }
     return true;
@@ -328,7 +319,7 @@ const OrderDetailsScreen = () => {
             disabled={buttonDisabled()}
           >
             <Text style={{ color: "white", fontWeight: "500", fontSize: 23 }}>
-              {buttonTitle()}
+              {STATUS_TO_TITLE[order.status]}
             </Text>
           </Pressable>
         </View>

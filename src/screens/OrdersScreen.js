@@ -7,8 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
-import { Entypo } from "@expo/vector-icons";
-import MapView, { Marker } from "react-native-maps";
+import MapView from "react-native-maps";
 import { DataStore } from "aws-amplify";
 
 import OrderItem from "../components/OrderItem";
