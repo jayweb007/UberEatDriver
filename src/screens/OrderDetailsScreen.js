@@ -17,11 +17,14 @@ import BottomSheet from "@gorhom/bottom-sheet";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import * as Location from "expo-location";
+import { DataStore } from "aws-amplify";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
 import * as env from "../../env";
 import { useOrderContext } from "../contexts/OrderContext";
 import CustomMarker from "../components/CustomMarker";
+import { Driver } from "../models";
+import { useAuthContext } from "../contexts/AuthContext";
 
 const driver = {
   latitude: 6.506935, //DRIVER
@@ -53,6 +56,7 @@ const OrderDetailsScreen = () => {
     pickUpOrder,
     completeOrder,
   } = useOrderContext();
+  const { dbDriver } = useAuthContext();
 
   const [driverLocation, setDriverLocation] = useState(null);
   const [totalKM, setTotalKM] = useState(0);
@@ -70,6 +74,19 @@ const OrderDetailsScreen = () => {
   useEffect(() => {
     fetchOrder(id);
   }, [id]);
+
+  useEffect(() => {
+    if (!driverLocation) {
+      return;
+    }
+
+    DataStore.save(
+      Driver.copyOf(dbDriver, (updated) => {
+        updated.lat = driverLocation.latitude;
+        updated.lng = driverLocation.longitude;
+      })
+    );
+  }, [driverLocation]);
 
   const forgroundSubscription = async () => {
     let watchingDriver = await Location.watchPositionAsync(

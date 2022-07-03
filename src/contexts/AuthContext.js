@@ -22,6 +22,21 @@ const AuthContextProvider = ({ children }) => {
     );
   }, [sub]);
 
+  useEffect(() => {
+    if (!dbDriver) {
+      return;
+    }
+    const subscription = DataStore.observe(Driver, dbDriver.id).subscribe(
+      (msg) => {
+        if (msg.opType === "UPDATE") {
+          setDbDriver(msg.element);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <AuthContext.Provider value={{ authUser, setDbDriver, dbDriver, sub }}>
       {children}
